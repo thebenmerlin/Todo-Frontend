@@ -5,23 +5,32 @@ const addBtn = document.getElementById("add-btn");
 const titleInput = document.getElementById("todo-title");
 
 async function fetchTodos() {
-  const res = await fetch(API_BASE_URL);
-  const todos = await res.json();
-  renderTodos(todos);
+  try {
+    const res = await fetch(API_BASE_URL);
+    const todos = await res.json();
+    renderTodos(todos);
+  } catch (error) {
+    console.error("Failed to fetch todos:", error);
+  }
 }
 
 function renderTodos(todos) {
   todoList.innerHTML = "";
+  if (todos.length === 0) {
+    todoList.innerHTML = `<p style="text-align:center;color:#555;">No tasks yet. Add one!</p>`;
+    return;
+  }
+
   todos.forEach(todo => {
     const li = document.createElement("li");
     li.className = `todo-item ${todo.completed ? "completed" : ""}`;
     li.innerHTML = `
       <span>${todo.title}</span>
-      <div>
-        <button onclick="toggleTodo('${todo.id}', ${!todo.completed})">
+      <div class="todo-actions">
+        <button class="done-btn" onclick="toggleTodo('${todo.id}', ${!todo.completed})">
           ${todo.completed ? "Undo" : "Done"}
         </button>
-        <button class="delete-btn" onclick="deleteTodo('${todo.id}')">Delete</button>
+        <button class="delete-btn" onclick="deleteTodo('${todo.id}')">✕</button>
       </div>
     `;
     todoList.appendChild(li);
