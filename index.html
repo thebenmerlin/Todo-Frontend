@@ -3,19 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Todo App</title>
+  <title>NetSphere Tasks</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-    <h1>✅ My To-Do List</h1>
-    
-    <div class="todo-input">
-      <input type="text" id="todo-title" placeholder="Add a new task..." />
-      <button id="add-btn">Add</button>
-    </div>
+  <div class="app-wrapper">
+    <header>
+      <h1>Taskboard</h1>
+      <p>Track tasks live from your Render backend</p>
+    </header>
 
-    <ul id="todo-list"></ul>
+    <main>
+      <div class="task-input">
+        <input type="text" id="todo-title" placeholder="Type a task..." />
+        <button id="add-btn">+</button>
+      </div>
+
+      <ul id="todo-list"></ul>
+    </main>
+
+    <footer>
+      <span>Built by <strong>Gajanan</strong> ⚡ Powered by <strong>Render</strong></span>
+    </footer>
   </div>
 
   <script src="main.js"></script>
