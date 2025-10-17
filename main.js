@@ -1,37 +1,77 @@
 // API Configuration
 const API_URL = 'https://todo-backend-0dru.onrender.com/api/todos';
 
-// DOM Elements
+// DOM Elements - Windows
 const todoWindow = document.getElementById('todoWindow');
-const titleBar = document.getElementById('titleBar');
-const minimizeBtn = document.getElementById('minimizeBtn');
-const maximizeBtn = document.getElementById('maximizeBtn');
-const closeBtn = document.getElementById('closeBtn');
+const gameWindow = document.getElementById('gameWindow');
+const allWindows = [todoWindow, gameWindow];
+
+// DOM Elements - Controls
 const startBtn = document.getElementById('startBtn');
 const startMenu = document.getElementById('startMenu');
+const clock = document.getElementById('clock');
+
+// DOM Elements - Desktop Icons
+const todoIcon = document.getElementById('todoIcon');
+const gameIcon = document.getElementById('gameIcon');
+
+// DOM Elements - Taskbar Items
 const todoTaskbarBtn = document.getElementById('todoTaskbarBtn');
+const gameTaskbarBtn = document.getElementById('gameTaskbarBtn');
+
+// DOM Elements - Todo App
 const taskInput = document.getElementById('taskInput');
 const addTaskBtn = document.getElementById('addTaskBtn');
 const taskList = document.getElementById('taskList');
-const clock = document.getElementById('clock');
+
+// DOM Elements - Game
+const gameBoard = document.getElementById('gameBoard');
+const gameStatus = document.getElementById('gameStatus');
+const restartBtn = document.getElementById('restartBtn');
+const gameCells = document.querySelectorAll('.game-cell');
+
+// Audio Elements
 const addSound = document.getElementById('addSound');
 const clickSound = document.getElementById('clickSound');
+const winSound = document.getElementById('winSound');
 
 // State
 let tasks = [];
+let currentWindow = null;
+let draggedWindow = null;
 let isDragging = false;
-let isMaximized = false;
 let dragOffset = { x: 0, y: 0 };
-let originalPosition = { top: '', left: '', width: '', height: '', transform: '' };
+let windowStates = {
+    todo: { isMaximized: false, originalPosition: {} },
+    game: { isMaximized: false, originalPosition: {} }
+};
+
+// Tic Tac Toe State
+let gameState = ['', '', '', '', '', '', '', '', ''];
+let currentPlayer = 'X';
+let gameActive = true;
+
+const winningConditions = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6]
+];
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     initClock();
-    initWindowDrag();
-    initWindowControls();
+    initWindowSystem();
     initTaskbar();
+    initStartMenu();
+    initDesktopIcons();
     loadTasks();
     initTaskInput();
+    initGame();
 });
 
 // Clock
@@ -53,93 +93,177 @@ function updateClock() {
     clock.textContent = `${hours}:${minutesStr} ${ampm}`;
 }
 
-// Window Dragging
-function initWindowDrag() {
-    titleBar.addEventListener('mousedown', startDrag);
+// Window System
+function initWindowSystem() {
+    // Add event listeners to all window controls
+    document.querySelectorAll('.title-bar-button').forEach(button => {
+        button.addEventListener('click', handleWindowControl);
+    });
+
+    // Add dragging functionality
+    document.querySelectorAll('.title-bar').forEach(titleBar => {
+        titleBar.addEventListener('mousedown', startDrag);
+    });
+
     document.addEventListener('mousemove', drag);
     document.addEventListener('mouseup', stopDrag);
+
+    // Click on window to bring to front
+    allWindows.forEach(window => {
+        window.addEventListener('mousedown', () => bringToFront(window));
+    });
 }
 
+function handleWindowControl(e) {
+    e.stopPropagation();
+    playSound(clickSound);
+    
+    const action = e.currentTarget.dataset.action;
+    const windowId = e.currentTarget.dataset.window;
+    const window = document.getElementById(`${windowId}Window`);
+    
+    switch(action) {
+        case 'minimize':
+            minimizeWindow(window, windowId);
+            break;
+        case 'maximize':
+            toggleMaximize(window, windowId);
+            break;
+        case 'close':
+            closeWindow(window, windowId);
+            break;
+    }
+}
+
+function openWindow(windowId) {
+    playSound(clickSound);
+    const window = document.getElementById(`${windowId}Window`);
+    const taskbarBtn = document.getElementById(`${windowId}TaskbarBtn`);
+    
+    window.classList.add('active');
+    window.classList.remove('minimized');
+    taskbarBtn.classList.add('visible', 'active');
+    
+    bringToFront(window);
+    currentWindow = windowId;
+}
+
+function closeWindow(window, windowId) {
+    window.classList.remove('active', 'minimized');
+    const taskbarBtn = document.getElementById(`${windowId}TaskbarBtn`);
+    taskbarBtn.classList.remove('visible', 'active');
+    
+    if (currentWindow === windowId) {
+        currentWindow = null;
+    }
+}
+
+function minimizeWindow(window, windowId) {
+    window.classList.add('minimized');
+    const taskbarBtn = document.getElementById(`${windowId}TaskbarBtn`);
+    taskbarBtn.classList.remove('active');
+}
+
+function toggleMaximize(window, windowId) {
+    const state = windowStates[windowId];
+    
+    if (!state.isMaximized) {
+        // Save original position
+        state.originalPosition = {
+            top: window.style.top,
+            left: window.style.left,
+            width: window.style.width,
+            height: window.style.height,
+            transform: window.style.transform
+        };
+        
+        window.classList.add('maximized');
+        state.isMaximized = true;
+    } else {
+        // Restore original position
+        window.classList.remove('maximized');
+        Object.assign(window.style, state.originalPosition);
+        state.isMaximized = false;
+    }
+}
+
+function bringToFront(window) {
+    allWindows.forEach(w => {
+        w.style.zIndex = '100';
+    });
+    window.style.zIndex = '200';
+}
+
+// Window Dragging
 function startDrag(e) {
     if (e.target.closest('.title-bar-controls')) return;
-    if (isMaximized) return;
+    
+    const titleBar = e.currentTarget;
+    const window = titleBar.closest('.window');
+    const windowId = titleBar.dataset.window;
+    
+    if (windowStates[windowId].isMaximized) return;
     
     isDragging = true;
-    const rect = todoWindow.getBoundingClientRect();
+    draggedWindow = window;
+    
+    const rect = window.getBoundingClientRect();
     dragOffset.x = e.clientX - rect.left;
     dragOffset.y = e.clientY - rect.top;
+    
     titleBar.style.cursor = 'grabbing';
+    bringToFront(window);
 }
 
 function drag(e) {
-    if (!isDragging) return;
+    if (!isDragging || !draggedWindow) return;
     
     e.preventDefault();
     let newX = e.clientX - dragOffset.x;
     let newY = e.clientY - dragOffset.y;
     
     // Boundary constraints
-    const maxX = window.innerWidth - todoWindow.offsetWidth;
-    const maxY = window.innerHeight - todoWindow.offsetHeight - 40;
+    const maxX = window.innerWidth - draggedWindow.offsetWidth;
+    const maxY = window.innerHeight - draggedWindow.offsetHeight - 40;
     
     newX = Math.max(0, Math.min(newX, maxX));
     newY = Math.max(0, Math.min(newY, maxY));
     
-    todoWindow.style.left = newX + 'px';
-    todoWindow.style.top = newY + 'px';
-    todoWindow.style.transform = 'none';
+    draggedWindow.style.left = newX + 'px';
+    draggedWindow.style.top = newY + 'px';
+    draggedWindow.style.transform = 'none';
 }
 
-function stopDrag() {
-    isDragging = false;
-    titleBar.style.cursor = 'move';
-}
-
-// Window Controls
-function initWindowControls() {
-    minimizeBtn.addEventListener('click', () => {
-        playSound(clickSound);
-        todoWindow.classList.add('minimized');
-        todoTaskbarBtn.classList.remove('active');
-    });
-    
-    maximizeBtn.addEventListener('click', () => {
-        playSound(clickSound);
-        toggleMaximize();
-    });
-    
-    closeBtn.addEventListener('click', () => {
-        playSound(clickSound);
-        todoWindow.classList.add('minimized');
-        todoTaskbarBtn.classList.remove('active');
-    });
-}
-
-function toggleMaximize() {
-    if (!isMaximized) {
-        // Save original position
-        originalPosition.top = todoWindow.style.top;
-        originalPosition.left = todoWindow.style.left;
-        originalPosition.width = todoWindow.style.width;
-        originalPosition.height = todoWindow.style.height;
-        originalPosition.transform = todoWindow.style.transform;
-        
-        todoWindow.classList.add('maximized');
-        isMaximized = true;
-    } else {
-        // Restore original position
-        todoWindow.classList.remove('maximized');
-        todoWindow.style.top = originalPosition.top;
-        todoWindow.style.left = originalPosition.left;
-        todoWindow.style.width = originalPosition.width;
-        todoWindow.style.height = originalPosition.height;
-        todoWindow.style.transform = originalPosition.transform;
-        isMaximized = false;
+function stopDrag(e) {
+    if (isDragging && draggedWindow) {
+        const titleBar = draggedWindow.querySelector('.title-bar');
+        titleBar.style.cursor = 'move';
     }
+    isDragging = false;
+    draggedWindow = null;
 }
 
 // Taskbar
 function initTaskbar() {
+    todoTaskbarBtn.addEventListener('click', () => {
+        if (todoWindow.classList.contains('minimized') || !todoWindow.classList.contains('active')) {
+            openWindow('todo');
+        } else {
+            minimizeWindow(todoWindow, 'todo');
+        }
+    });
+    
+    gameTaskbarBtn.addEventListener('click', () => {
+        if (gameWindow.classList.contains('minimized') || !gameWindow.classList.contains('active')) {
+            openWindow('game');
+        } else {
+            minimizeWindow(gameWindow, 'game');
+        }
+    });
+}
+
+// Start Menu
+function initStartMenu() {
     startBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         playSound(clickSound);
@@ -147,15 +271,14 @@ function initTaskbar() {
         startBtn.classList.toggle('active');
     });
     
-    todoTaskbarBtn.addEventListener('click', () => {
-        playSound(clickSound);
-        if (todoWindow.classList.contains('minimized')) {
-            todoWindow.classList.remove('minimized');
-            todoTaskbarBtn.classList.add('active');
-        } else {
-            todoWindow.classList.add('minimized');
-            todoTaskbarBtn.classList.remove('active');
-        }
+    // Start menu items
+    document.querySelectorAll('.start-menu-item[data-app]').forEach(item => {
+        item.addEventListener('click', () => {
+            const app = item.dataset.app;
+            openWindow(app);
+            startMenu.classList.remove('active');
+            startBtn.classList.remove('active');
+        });
     });
     
     // Close start menu when clicking outside
@@ -167,7 +290,18 @@ function initTaskbar() {
     });
 }
 
-// Task Input
+// Desktop Icons
+function initDesktopIcons() {
+    todoIcon.addEventListener('dblclick', () => {
+        openWindow('todo');
+    });
+    
+    gameIcon.addEventListener('dblclick', () => {
+        openWindow('game');
+    });
+}
+
+// Task Input (Todo App)
 function initTaskInput() {
     addTaskBtn.addEventListener('click', addTask);
     taskInput.addEventListener('keypress', (e) => {
@@ -177,17 +311,15 @@ function initTaskInput() {
     });
 }
 
-// API Functions
+// API Functions (Todo App)
 async function loadTasks() {
     try {
         const response = await fetch(API_URL);
         if (!response.ok) throw new Error('Failed to fetch tasks');
         tasks = await response.json();
-        console.log('Loaded tasks:', tasks);
         renderTasks();
     } catch (error) {
         console.error('Error loading tasks:', error);
-        showError('Failed to load tasks. Please check your connection.');
     }
 }
 
@@ -201,25 +333,19 @@ async function addTask() {
             headers: {
                 'Content-Type': 'application/json',
             },
-            // Backend expects 'title' but we'll send 'text' and backend will handle both
             body: JSON.stringify({ text: text, completed: false }),
         });
         
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Server response:', errorText);
-            throw new Error('Failed to add task');
-        }
+        if (!response.ok) throw new Error('Failed to add task');
         
         const newTask = await response.json();
-        console.log('Added task:', newTask);
         tasks.push(newTask);
         taskInput.value = '';
         renderTasks();
         playSound(addSound);
     } catch (error) {
         console.error('Error adding task:', error);
-        showError('Failed to add task. Please try again.');
+        alert('Failed to add task. Please try again.');
     }
 }
 
@@ -236,21 +362,16 @@ async function toggleTaskCompletion(id) {
             body: JSON.stringify({ completed: !task.completed }),
         });
         
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Server response:', errorText);
-            throw new Error('Failed to update task');
-        }
+        if (!response.ok) throw new Error('Failed to update task');
         
         const updatedTask = await response.json();
-        console.log('Updated task:', updatedTask);
         const index = tasks.findIndex(t => t.id === id);
         tasks[index] = updatedTask;
         renderTasks();
         playSound(clickSound);
     } catch (error) {
         console.error('Error updating task:', error);
-        showError('Failed to update task. Please try again.');
+        alert('Failed to update task. Please try again.');
     }
 }
 
@@ -273,11 +394,10 @@ async function deleteTask(id) {
         playSound(clickSound);
     } catch (error) {
         console.error('Error deleting task:', error);
-        showError('Failed to delete task. Please try again.');
+        alert('Failed to delete task. Please try again.');
     }
 }
 
-// Render Tasks
 function renderTasks() {
     taskList.innerHTML = '';
     
@@ -291,7 +411,6 @@ function renderTasks() {
         taskElement.className = `task-item ${task.completed ? 'completed' : ''}`;
         taskElement.setAttribute('data-task-id', task.id);
         
-        // Backend uses 'title' field
         const taskText = task.title || task.text || 'Untitled Task';
         
         taskElement.innerHTML = `
@@ -308,6 +427,98 @@ function renderTasks() {
     });
 }
 
+// Tic Tac Toe Game Logic
+function initGame() {
+    gameCells.forEach(cell => {
+        cell.addEventListener('click', handleCellClick);
+    });
+    
+    restartBtn.addEventListener('click', restartGame);
+}
+
+function handleCellClick(e) {
+    const cell = e.target;
+    const index = parseInt(cell.dataset.cellIndex);
+    
+    if (gameState[index] !== '' || !gameActive) {
+        return;
+    }
+    
+    playSound(clickSound);
+    
+    gameState[index] = currentPlayer;
+    cell.textContent = currentPlayer;
+    cell.classList.add('taken', currentPlayer.toLowerCase());
+    
+    checkResult();
+}
+
+function checkResult() {
+    let roundWon = false;
+    let winningCombination = [];
+    
+    for (let i = 0; i < winningConditions.length; i++) {
+        const [a, b, c] = winningConditions[i];
+        if (gameState[a] === '' || gameState[b] === '' || gameState[c] === '') {
+            continue;
+        }
+        if (gameState[a] === gameState[b] && gameState[b] === gameState[c]) {
+            roundWon = true;
+            winningCombination = [a, b, c];
+            break;
+        }
+    }
+    
+    if (roundWon) {
+        gameStatus.textContent = `Player ${currentPlayer} Wins! 🎉`;
+        gameActive = false;
+        
+        // Highlight winning cells
+        winningCombination.forEach(index => {
+            gameCells[index].classList.add('winner');
+        });
+        
+        playSound(winSound);
+        setTimeout(() => {
+            showXPDialog(`Player ${currentPlayer} Wins!`, 'Game Over');
+        }, 500);
+        return;
+    }
+    
+    if (!gameState.includes('')) {
+        gameStatus.textContent = "It's a Draw!";
+        gameActive = false;
+        setTimeout(() => {
+            showXPDialog("It's a Draw!", 'Game Over');
+        }, 500);
+        return;
+    }
+    
+    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+    gameStatus.textContent = `Player ${currentPlayer}'s Turn`;
+}
+
+function restartGame() {
+    playSound(clickSound);
+    gameState = ['', '', '', '', '', '', '', '', ''];
+    currentPlayer = 'X';
+    gameActive = true;
+    gameStatus.textContent = `Player ${currentPlayer}'s Turn`;
+    
+    gameCells.forEach(cell => {
+        cell.textContent = '';
+        cell.classList.remove('taken', 'x', 'o', 'winner');
+    });
+}
+
+function showXPDialog(message, title) {
+    // Simple XP-style alert
+    const dialog = confirm(`${title}\n\n${message}\n\nPlay again?`);
+    if (dialog) {
+        restartGame();
+    }
+}
+
 // Utility Functions
 function playSound(audioElement) {
     audioElement.currentTime = 0;
@@ -318,12 +529,6 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
-}
-
-function showError(message) {
-    // Simple error display - could be enhanced with XP-style dialog
-    console.error(message);
-    alert(message);
 }
 
 // Make functions globally accessible for inline event handlers
