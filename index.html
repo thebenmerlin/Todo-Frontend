@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Windows XP - ToDo</title>
+    <title>Windows XP - Desktop</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,19 +13,31 @@
     <!-- Desktop Background -->
     <div class="desktop">
         
+        <!-- Desktop Icons -->
+        <div class="desktop-icons">
+            <div class="desktop-icon" id="todoIcon">
+                <div class="icon-image">📝</div>
+                <div class="icon-label">ToDo.exe</div>
+            </div>
+            <div class="desktop-icon" id="gameIcon">
+                <div class="icon-image">🎮</div>
+                <div class="icon-label">TicTacToe.exe</div>
+            </div>
+        </div>
+        
         <!-- ToDo Application Window -->
         <div class="window" id="todoWindow">
             <!-- Title Bar -->
-            <div class="title-bar" id="titleBar">
-                <div class="title-bar-text">ToDo XP</div>
+            <div class="title-bar" data-window="todo">
+                <div class="title-bar-text">ToDo.exe</div>
                 <div class="title-bar-controls">
-                    <button class="title-bar-button minimize" id="minimizeBtn" aria-label="Minimize">
+                    <button class="title-bar-button minimize" data-action="minimize" data-window="todo" aria-label="Minimize">
                         <span class="minimize-icon"></span>
                     </button>
-                    <button class="title-bar-button maximize" id="maximizeBtn" aria-label="Maximize">
+                    <button class="title-bar-button maximize" data-action="maximize" data-window="todo" aria-label="Maximize">
                         <span class="maximize-icon"></span>
                     </button>
-                    <button class="title-bar-button close" id="closeBtn" aria-label="Close">
+                    <button class="title-bar-button close" data-action="close" data-window="todo" aria-label="Close">
                         <span class="close-icon"></span>
                     </button>
                 </div>
@@ -48,6 +60,48 @@
             </div>
         </div>
 
+        <!-- Tic Tac Toe Game Window -->
+        <div class="window" id="gameWindow">
+            <!-- Title Bar -->
+            <div class="title-bar" data-window="game">
+                <div class="title-bar-text">TicTacToe.exe</div>
+                <div class="title-bar-controls">
+                    <button class="title-bar-button minimize" data-action="minimize" data-window="game" aria-label="Minimize">
+                        <span class="minimize-icon"></span>
+                    </button>
+                    <button class="title-bar-button maximize" data-action="maximize" data-window="game" aria-label="Maximize">
+                        <span class="maximize-icon"></span>
+                    </button>
+                    <button class="title-bar-button close" data-action="close" data-window="game" aria-label="Close">
+                        <span class="close-icon"></span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Game Content -->
+            <div class="window-content">
+                <h2 class="content-header">Tic Tac Toe</h2>
+                
+                <div class="game-info">
+                    <div class="game-status" id="gameStatus">Player X's Turn</div>
+                </div>
+
+                <div class="game-board" id="gameBoard">
+                    <div class="game-cell" data-cell-index="0"></div>
+                    <div class="game-cell" data-cell-index="1"></div>
+                    <div class="game-cell" data-cell-index="2"></div>
+                    <div class="game-cell" data-cell-index="3"></div>
+                    <div class="game-cell" data-cell-index="4"></div>
+                    <div class="game-cell" data-cell-index="5"></div>
+                    <div class="game-cell" data-cell-index="6"></div>
+                    <div class="game-cell" data-cell-index="7"></div>
+                    <div class="game-cell" data-cell-index="8"></div>
+                </div>
+
+                <button id="restartBtn" class="restart-button">New Game</button>
+            </div>
+        </div>
+
         <!-- Taskbar -->
         <div class="taskbar">
             <button class="start-button" id="startBtn">
@@ -56,9 +110,13 @@
             </button>
             
             <div class="task-area">
-                <button class="taskbar-item active" id="todoTaskbarBtn">
+                <button class="taskbar-item" id="todoTaskbarBtn" data-window="todo">
                     <span class="taskbar-icon">📝</span>
-                    <span class="taskbar-label">ToDo XP</span>
+                    <span class="taskbar-label">ToDo.exe</span>
+                </button>
+                <button class="taskbar-item" id="gameTaskbarBtn" data-window="game">
+                    <span class="taskbar-icon">🎮</span>
+                    <span class="taskbar-label">TicTacToe.exe</span>
                 </button>
             </div>
 
@@ -67,12 +125,19 @@
             </div>
         </div>
 
-        <!-- Start Menu (Hidden by default) -->
+        <!-- Start Menu -->
         <div class="start-menu" id="startMenu">
             <div class="start-menu-header">
                 <div class="start-menu-user">Windows XP</div>
             </div>
             <div class="start-menu-content">
+                <div class="start-menu-item" data-app="todo">
+                    <span>📝 ToDo Application</span>
+                </div>
+                <div class="start-menu-item" data-app="game">
+                    <span>🎮 Tic Tac Toe</span>
+                </div>
+                <div class="start-menu-separator"></div>
                 <div class="start-menu-item">
                     <span>📁 My Documents</span>
                 </div>
@@ -101,6 +166,9 @@
         <source src="data:audio/wav;base64,UklGRhQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=" type="audio/wav">
     </audio>
     <audio id="clickSound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRhQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=" type="audio/wav">
+    </audio>
+    <audio id="winSound" preload="auto">
         <source src="data:audio/wav;base64,UklGRhQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=" type="audio/wav">
     </audio>
 
