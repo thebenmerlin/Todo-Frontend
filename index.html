@@ -23,11 +23,14 @@
                 <div class="icon-image">🎮</div>
                 <div class="icon-label">TicTacToe.exe</div>
             </div>
+            <div class="desktop-icon" id="notepadIcon">
+                <div class="icon-image">📄</div>
+                <div class="icon-label">README.txt</div>
+            </div>
         </div>
         
         <!-- ToDo Application Window -->
         <div class="window" id="todoWindow">
-            <!-- Title Bar -->
             <div class="title-bar" data-window="todo">
                 <div class="title-bar-text">ToDo.exe</div>
                 <div class="title-bar-controls">
@@ -43,26 +46,20 @@
                 </div>
             </div>
 
-            <!-- Window Content -->
             <div class="window-content">
                 <h2 class="content-header">My Tasks</h2>
                 
-                <!-- Task Input Area -->
                 <div class="task-input-container">
                     <input type="text" id="taskInput" class="task-input" placeholder="Enter a new task..." />
                     <button id="addTaskBtn" class="add-button">Add Task</button>
                 </div>
 
-                <!-- Task List -->
-                <div class="task-list" id="taskList">
-                    <!-- Tasks will be dynamically added here -->
-                </div>
+                <div class="task-list" id="taskList"></div>
             </div>
         </div>
 
         <!-- Tic Tac Toe Game Window -->
         <div class="window" id="gameWindow">
-            <!-- Title Bar -->
             <div class="title-bar" data-window="game">
                 <div class="title-bar-text">TicTacToe.exe</div>
                 <div class="title-bar-controls">
@@ -78,7 +75,6 @@
                 </div>
             </div>
 
-            <!-- Game Content -->
             <div class="window-content">
                 <h2 class="content-header">Tic Tac Toe</h2>
                 
@@ -102,6 +98,43 @@
             </div>
         </div>
 
+        <!-- Notepad Window -->
+        <div class="window" id="notepadWindow">
+            <div class="title-bar" data-window="notepad">
+                <div class="title-bar-text">README.txt - Notepad</div>
+                <div class="title-bar-controls">
+                    <button class="title-bar-button minimize" data-action="minimize" data-window="notepad" aria-label="Minimize">
+                        <span class="minimize-icon"></span>
+                    </button>
+                    <button class="title-bar-button maximize" data-action="maximize" data-window="notepad" aria-label="Maximize">
+                        <span class="maximize-icon"></span>
+                    </button>
+                    <button class="title-bar-button close" data-action="close" data-window="notepad" aria-label="Close">
+                        <span class="close-icon"></span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="window-content notepad-content">
+                <textarea id="notepadText" class="notepad-textarea" spellcheck="false">Welcome to Windows XP Desktop!
+
+This is a fully functional Windows XP-style desktop environment built with HTML, CSS, and JavaScript.
+
+Features:
+- To-Do Application with backend integration
+- Tic Tac Toe Game
+- Draggable windows
+- Working taskbar and Start menu
+- Desktop icons
+
+You can edit this text file and it will remain in your browser's memory while the page is open.
+
+Created with ❤️ using vanilla JavaScript.
+
+Feel free to modify this text!</textarea>
+            </div>
+        </div>
+
         <!-- Taskbar -->
         <div class="taskbar">
             <button class="start-button" id="startBtn">
@@ -117,6 +150,10 @@
                 <button class="taskbar-item" id="gameTaskbarBtn" data-window="game">
                     <span class="taskbar-icon">🎮</span>
                     <span class="taskbar-label">TicTacToe.exe</span>
+                </button>
+                <button class="taskbar-item" id="notepadTaskbarBtn" data-window="notepad">
+                    <span class="taskbar-icon">📄</span>
+                    <span class="taskbar-label">README.txt</span>
                 </button>
             </div>
 
@@ -136,6 +173,9 @@
                 </div>
                 <div class="start-menu-item" data-app="game">
                     <span>🎮 Tic Tac Toe</span>
+                </div>
+                <div class="start-menu-item" data-app="notepad">
+                    <span>📄 README.txt</span>
                 </div>
                 <div class="start-menu-separator"></div>
                 <div class="start-menu-item">
