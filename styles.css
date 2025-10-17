@@ -14,14 +14,11 @@ body {
 
 /* Desktop with Bliss Wallpaper */
 .desktop {
-    width: 100%;
-    height: 100%;
-    background-image: url('https://upload.wikimedia.org/wikipedia/en/5/5f/Windows_XP_bliss_wallpaper.jpg');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    position: relative;
-    overflow: hidden;
+  background-image: url('./Assets/Bliss.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  height: 100%;
 }
 
 /* Desktop Icons */
