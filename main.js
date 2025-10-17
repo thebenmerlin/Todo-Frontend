@@ -183,6 +183,7 @@ async function loadTasks() {
         const response = await fetch(API_URL);
         if (!response.ok) throw new Error('Failed to fetch tasks');
         tasks = await response.json();
+        console.log('Loaded tasks:', tasks);
         renderTasks();
     } catch (error) {
         console.error('Error loading tasks:', error);
@@ -200,12 +201,18 @@ async function addTask() {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ text, completed: false }),
+            // Backend expects 'title' but we'll send 'text' and backend will handle both
+            body: JSON.stringify({ text: text, completed: false }),
         });
         
-        if (!response.ok) throw new Error('Failed to add task');
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Server response:', errorText);
+            throw new Error('Failed to add task');
+        }
         
         const newTask = await response.json();
+        console.log('Added task:', newTask);
         tasks.push(newTask);
         taskInput.value = '';
         renderTasks();
@@ -229,9 +236,14 @@ async function toggleTaskCompletion(id) {
             body: JSON.stringify({ completed: !task.completed }),
         });
         
-        if (!response.ok) throw new Error('Failed to update task');
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Server response:', errorText);
+            throw new Error('Failed to update task');
+        }
         
         const updatedTask = await response.json();
+        console.log('Updated task:', updatedTask);
         const index = tasks.findIndex(t => t.id === id);
         tasks[index] = updatedTask;
         renderTasks();
@@ -270,7 +282,7 @@ function renderTasks() {
     taskList.innerHTML = '';
     
     if (tasks.length === 0) {
-        taskList.innerHTML = '<div style="text-align: center; color: #7A7A7A; padding: 20px; font-size: 13px;">No tasks yet. Add one to get started!</div>';
+        taskList.innerHTML = '<div style="text-align: center; color: #333; padding: 20px; font-size: 13px; background: #FAFAFA; border: 1px dashed #BFC9CA; border-radius: 3px;">No tasks yet. Add one to get started!</div>';
         return;
     }
     
@@ -279,8 +291,11 @@ function renderTasks() {
         taskElement.className = `task-item ${task.completed ? 'completed' : ''}`;
         taskElement.setAttribute('data-task-id', task.id);
         
+        // Backend uses 'title' field
+        const taskText = task.title || task.text || 'Untitled Task';
+        
         taskElement.innerHTML = `
-            <div class="task-text">${escapeHtml(task.text)}</div>
+            <div class="task-text">${escapeHtml(taskText)}</div>
             <div class="task-buttons">
                 <button class="task-button done" onclick="toggleTaskCompletion('${task.id}')">
                     ${task.completed ? 'Undo' : 'Done'}
