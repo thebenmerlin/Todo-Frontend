@@ -4,7 +4,8 @@ const API_URL = 'https://todo-backend-0dru.onrender.com/api/todos';
 // DOM Elements - Windows
 const todoWindow = document.getElementById('todoWindow');
 const gameWindow = document.getElementById('gameWindow');
-const allWindows = [todoWindow, gameWindow];
+const notepadWindow = document.getElementById('notepadWindow');
+const allWindows = [todoWindow, gameWindow, notepadWindow];
 
 // DOM Elements - Controls
 const startBtn = document.getElementById('startBtn');
@@ -14,10 +15,12 @@ const clock = document.getElementById('clock');
 // DOM Elements - Desktop Icons
 const todoIcon = document.getElementById('todoIcon');
 const gameIcon = document.getElementById('gameIcon');
+const notepadIcon = document.getElementById('notepadIcon');
 
 // DOM Elements - Taskbar Items
 const todoTaskbarBtn = document.getElementById('todoTaskbarBtn');
 const gameTaskbarBtn = document.getElementById('gameTaskbarBtn');
+const notepadTaskbarBtn = document.getElementById('notepadTaskbarBtn');
 
 // DOM Elements - Todo App
 const taskInput = document.getElementById('taskInput');
@@ -29,6 +32,9 @@ const gameBoard = document.getElementById('gameBoard');
 const gameStatus = document.getElementById('gameStatus');
 const restartBtn = document.getElementById('restartBtn');
 const gameCells = document.querySelectorAll('.game-cell');
+
+// DOM Elements - Notepad
+const notepadText = document.getElementById('notepadText');
 
 // Audio Elements
 const addSound = document.getElementById('addSound');
@@ -43,7 +49,8 @@ let isDragging = false;
 let dragOffset = { x: 0, y: 0 };
 let windowStates = {
     todo: { isMaximized: false, originalPosition: {} },
-    game: { isMaximized: false, originalPosition: {} }
+    game: { isMaximized: false, originalPosition: {} },
+    notepad: { isMaximized: false, originalPosition: {} }
 };
 
 // Tic Tac Toe State
@@ -52,14 +59,9 @@ let currentPlayer = 'X';
 let gameActive = true;
 
 const winningConditions = [
-    [0, 1, 2],
-    [3, 4, 5],
-    [6, 7, 8],
-    [0, 3, 6],
-    [1, 4, 7],
-    [2, 5, 8],
-    [0, 4, 8],
-    [2, 4, 6]
+    [0, 1, 2], [3, 4, 5], [6, 7, 8],
+    [0, 3, 6], [1, 4, 7], [2, 5, 8],
+    [0, 4, 8], [2, 4, 6]
 ];
 
 // Initialize
@@ -72,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadTasks();
     initTaskInput();
     initGame();
+    initNotepad();
 });
 
 // Clock
@@ -95,12 +98,10 @@ function updateClock() {
 
 // Window System
 function initWindowSystem() {
-    // Add event listeners to all window controls
     document.querySelectorAll('.title-bar-button').forEach(button => {
         button.addEventListener('click', handleWindowControl);
     });
 
-    // Add dragging functionality
     document.querySelectorAll('.title-bar').forEach(titleBar => {
         titleBar.addEventListener('mousedown', startDrag);
     });
@@ -108,7 +109,6 @@ function initWindowSystem() {
     document.addEventListener('mousemove', drag);
     document.addEventListener('mouseup', stopDrag);
 
-    // Click on window to bring to front
     allWindows.forEach(window => {
         window.addEventListener('mousedown', () => bringToFront(window));
     });
@@ -168,7 +168,6 @@ function toggleMaximize(window, windowId) {
     const state = windowStates[windowId];
     
     if (!state.isMaximized) {
-        // Save original position
         state.originalPosition = {
             top: window.style.top,
             left: window.style.left,
@@ -180,7 +179,6 @@ function toggleMaximize(window, windowId) {
         window.classList.add('maximized');
         state.isMaximized = true;
     } else {
-        // Restore original position
         window.classList.remove('maximized');
         Object.assign(window.style, state.originalPosition);
         state.isMaximized = false;
@@ -222,7 +220,6 @@ function drag(e) {
     let newX = e.clientX - dragOffset.x;
     let newY = e.clientY - dragOffset.y;
     
-    // Boundary constraints
     const maxX = window.innerWidth - draggedWindow.offsetWidth;
     const maxY = window.innerHeight - draggedWindow.offsetHeight - 40;
     
@@ -260,6 +257,14 @@ function initTaskbar() {
             minimizeWindow(gameWindow, 'game');
         }
     });
+    
+    notepadTaskbarBtn.addEventListener('click', () => {
+        if (notepadWindow.classList.contains('minimized') || !notepadWindow.classList.contains('active')) {
+            openWindow('notepad');
+        } else {
+            minimizeWindow(notepadWindow, 'notepad');
+        }
+    });
 }
 
 // Start Menu
@@ -271,7 +276,6 @@ function initStartMenu() {
         startBtn.classList.toggle('active');
     });
     
-    // Start menu items
     document.querySelectorAll('.start-menu-item[data-app]').forEach(item => {
         item.addEventListener('click', () => {
             const app = item.dataset.app;
@@ -281,7 +285,6 @@ function initStartMenu() {
         });
     });
     
-    // Close start menu when clicking outside
     document.addEventListener('click', (e) => {
         if (!startBtn.contains(e.target) && !startMenu.contains(e.target)) {
             startMenu.classList.remove('active');
@@ -299,6 +302,24 @@ function initDesktopIcons() {
     gameIcon.addEventListener('dblclick', () => {
         openWindow('game');
     });
+    
+    notepadIcon.addEventListener('dblclick', () => {
+        openWindow('notepad');
+    });
+}
+
+// Notepad
+function initNotepad() {
+    // Auto-save to localStorage
+    notepadText.addEventListener('input', () => {
+        localStorage.setItem('notepadContent', notepadText.value);
+    });
+    
+    // Load saved content
+    const savedContent = localStorage.getItem('notepadContent');
+    if (savedContent) {
+        notepadText.value = savedContent;
+    }
 }
 
 // Task Input (Todo App)
@@ -473,7 +494,6 @@ function checkResult() {
         gameStatus.textContent = `Player ${currentPlayer} Wins! 🎉`;
         gameActive = false;
         
-        // Highlight winning cells
         winningCombination.forEach(index => {
             gameCells[index].classList.add('winner');
         });
@@ -512,7 +532,6 @@ function restartGame() {
 }
 
 function showXPDialog(message, title) {
-    // Simple XP-style alert
     const dialog = confirm(`${title}\n\n${message}\n\nPlay again?`);
     if (dialog) {
         restartGame();
