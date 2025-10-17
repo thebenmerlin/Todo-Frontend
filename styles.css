@@ -12,14 +12,56 @@ body {
     cursor: default;
 }
 
-/* Desktop */
+/* Desktop with Bliss Wallpaper */
 .desktop {
     width: 100%;
     height: 100%;
-    background-image: url('https://upload.wikimedia.org/wikipedia/en/5/5f/Windows_XP_bliss_wallpaper.jpg');
+    background-image: url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1920&h=1080&fit=crop');
     background-size: cover;
     background-position: center;
     position: relative;
+}
+
+/* Desktop Icons */
+.desktop-icons {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    z-index: 50;
+}
+
+.desktop-icon {
+    width: 80px;
+    text-align: center;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 3px;
+    transition: background 0.2s ease;
+}
+
+.desktop-icon:hover {
+    background: rgba(51, 153, 255, 0.3);
+}
+
+.desktop-icon:active {
+    background: rgba(51, 153, 255, 0.5);
+}
+
+.icon-image {
+    font-size: 48px;
+    margin-bottom: 4px;
+    filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.5));
+}
+
+.icon-label {
+    font-size: 11px;
+    color: #fff;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    word-wrap: break-word;
 }
 
 /* Window Styles */
@@ -34,13 +76,17 @@ body {
     border: 2px solid #0C2461;
     border-radius: 8px 8px 0 0;
     box-shadow: 0 8px 20px rgba(0, 0, 50, 0.4);
-    display: flex;
+    display: none;
     flex-direction: column;
     z-index: 100;
 }
 
+.window.active {
+    display: flex;
+}
+
 .window.minimized {
-    display: none;
+    display: none !important;
 }
 
 .window.maximized {
@@ -49,6 +95,12 @@ body {
     top: 20px !important;
     left: 20px !important;
     transform: none !important;
+}
+
+/* Game Window Specific Size */
+#gameWindow {
+    width: 450px;
+    height: auto;
 }
 
 /* Title Bar */
@@ -256,7 +308,6 @@ body {
     color: #888 !important;
 }
 
-/* CRITICAL FIX: Make task text ALWAYS visible */
 .task-text {
     flex: 1;
     font-size: 14px;
@@ -314,6 +365,104 @@ body {
 .task-button.delete:active {
     background: linear-gradient(180deg, #DC3545 0%, #B02535 100%);
     box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Tic Tac Toe Game Styles */
+.game-info {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.game-status {
+    font-size: 16px;
+    font-weight: bold;
+    color: #0D1B2A;
+    padding: 10px;
+    background: #E8F2FF;
+    border: 1px solid #BFC9CA;
+    border-radius: 3px;
+}
+
+.game-board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin: 0 auto 20px;
+    max-width: 300px;
+}
+
+.game-cell {
+    aspect-ratio: 1;
+    background: linear-gradient(180deg, #FFFFFF 0%, #F5F5F5 100%);
+    border: 2px outset #BFC9CA;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 2px 3px rgba(0, 0, 0, 0.1);
+}
+
+.game-cell:hover:not(.taken) {
+    background: linear-gradient(180deg, #E8F2FF 0%, #D3E5FA 100%);
+    border-color: #245EDC;
+}
+
+.game-cell:active:not(.taken) {
+    border-style: inset;
+    box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.2);
+}
+
+.game-cell.taken {
+    cursor: not-allowed;
+}
+
+.game-cell.x {
+    color: #DC3545;
+}
+
+.game-cell.o {
+    color: #245EDC;
+}
+
+.game-cell.winner {
+    background: linear-gradient(180deg, #90EE90 0%, #7AD16A 100%);
+    animation: winPulse 0.5s ease-in-out;
+}
+
+@keyframes winPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.restart-button {
+    display: block;
+    margin: 0 auto;
+    padding: 8px 24px;
+    background: linear-gradient(180deg, #5A9DFF 0%, #245EDC 100%);
+    border: 1px solid #0C2461;
+    color: #fff;
+    font-size: 13px;
+    font-weight: bold;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-family: 'Tahoma', sans-serif;
+    border-radius: 2px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 2px 3px rgba(0, 0, 0, 0.2);
+    transition: all 0.15s ease-in-out;
+}
+
+.restart-button:hover {
+    background: linear-gradient(180deg, #70ADFF 0%, #3068E6 100%);
+}
+
+.restart-button:active {
+    background: linear-gradient(180deg, #245EDC 0%, #1E4DB7 100%);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    transform: translateY(1px);
 }
 
 /* Taskbar */
@@ -386,7 +535,7 @@ body {
     background: linear-gradient(180deg, #3A6EE9 0%, #2B5FD9 100%);
     border: 1px outset rgba(255, 255, 255, 0.4);
     border-radius: 2px;
-    display: flex;
+    display: none;
     align-items: center;
     gap: 6px;
     cursor: pointer;
@@ -395,6 +544,10 @@ body {
     color: #fff;
     transition: all 0.1s ease;
     max-width: 200px;
+}
+
+.taskbar-item.visible {
+    display: flex;
 }
 
 .taskbar-item:hover {
@@ -523,14 +676,23 @@ body {
 /* Responsive */
 @media (max-width: 768px) {
     .window {
-        width: calc(100% - 20px);
-        height: calc(100% - 80px);
+        width: calc(100% - 20px) !important;
+        height: calc(100% - 80px) !important;
         top: 10px !important;
         left: 10px !important;
         transform: none !important;
     }
 
+    #gameWindow {
+        width: calc(100% - 20px) !important;
+    }
+
     .start-menu {
         width: calc(100% - 10px);
+    }
+    
+    .desktop-icons {
+        top: 10px;
+        left: 10px;
     }
 }
